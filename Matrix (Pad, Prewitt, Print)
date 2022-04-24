@@ -1,0 +1,120 @@
+// MICHAEL BARRETT   006384049
+
+
+#include <iostream>
+using namespace std;
+
+int input[5][5] = {{10,3,2,5,4},
+                   {11,8,3,1,6},
+                   {7, 5,6,2,7},
+                   {2, 1,9,4,2},
+                   {2, 3,3,0,1}};
+int proc_input[7][7];
+int outputy[5][5]; 
+int outputx[5][5];
+
+void pad(){
+    // 1. Duplicate the first and last vectors (First gets put on top / Last gets put on bottom)
+    // 2. Copy the body from input into the body of proc_input
+    // 3. Extend every first and last number (First gets put into left / Last gets put into right) in proc_input
+    
+    // Create padding of top row of input, into the top row of proc_input
+    for (int i = 0; i <= 4; i++){   // loop that copies the first row into padded area (upper)
+        proc_input[0][i+1] = input[0][i];
+    }
+    
+    // Copy the body of input into the body of proc_input 
+    for (int i = 0; i <=4; i++){        // nested loop that copies the input into the body of the processed
+        for (int j = 0; j <= 4; j++){
+            proc_input[i+1][j+1] = input[i][j]; // proc_input indexes are +1 since the buffer is above and left  
+        }
+    }
+
+    // Create padding of bottom row of input, into the bottom row of proc_input
+    for (int i = 0; i <= 6; i++){   // loop that copies the last row into padded area (lower)
+        proc_input[6][i+1] = input[4][i];
+    }
+
+    // Create padding for the left and right side, by extending the sides of proc_input
+    for (int i = 0; i <= 6; i++){
+        proc_input[i][0] = proc_input[i][1];
+        proc_input[i][6] = proc_input[i][5];
+
+    }
+}
+
+// prints the input matrix (10,3,2,5,4) etc
+void printInput(){      
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << input[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// prints the padded matrix from the original input matrix
+void printPadded(){      
+    for (int i = 0; i<=6; i++){ // row
+        for (int j = 0; j <=6; j++){    // col
+            cout << proc_input[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print output of prewitt y
+void printOutputY(){     
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << outputy[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print output of prewitt x
+void printOutputX(){     
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << outputx[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// apply the prewitt vertical
+void prewittY(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            outputy[i][j] = (    (proc_input[i][j]*-1) + (proc_input[i][j+1]*-1) + (proc_input[i][j+2]*-1) +
+                                (proc_input[i+1][j]*0)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*0)   + 
+                                (proc_input[i+2][j]*1)+ (proc_input[i+2][j+1]*1)+ (proc_input[i+2][j+2]*1) );
+        }
+    }
+}
+
+// apply the prewitt horizontal !! This is wrong, needs to be -1 on left side rather than 1
+void prewittX(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            outputx[i][j] = (    (proc_input[i][j]*1) + (proc_input[i][j+1]*0) + (proc_input[i][j+2]*-1) +
+                                (proc_input[i+1][j]*1)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*-1)   + 
+                                (proc_input[i+2][j]*1)+ (proc_input[i+2][j+1]*0)+ (proc_input[i+2][j+2]*-1) );
+        }
+    }
+}
+
+int main(){
+    pad();
+    cout << "Input:" << endl;
+    printInput();
+    cout << "\n Padded input:" << endl;
+    printPadded();
+    cout << "\n Output Y" << endl;
+    prewittY();
+    printOutputY();
+    cout << "\n Output X " << endl;
+    prewittX();
+    printOutputX();
+}
