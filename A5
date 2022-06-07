@@ -1,0 +1,337 @@
+// MICHAEL BARRETT   006384049
+
+
+#include <iostream>
+#include <stdio.h>
+#include <math.h>
+#include <cmath>
+using namespace std;
+
+int input[5][5] = {{10,3,2,5,4},
+                   {11,8,3,1,6},
+                   {7, 5,6,2,7},
+                   {2, 1,9,4,2},
+                   {2, 3,3,0,1}};
+
+int input2[5][5] = {{4, 1, 6, 1, 3},
+                   {3, 2, 7, 7, 2},
+                   {2, 5, 7, 3, 7},
+                   {1, 4, 7, 1, 3},
+                   {0, 1, 6, 4, 4}};
+
+
+int proc_input[7][7];
+int outputy[5][5]; 
+int outputx[5][5];
+
+int gradientImg[5][5];
+int threshImg[5][5];
+
+int sobelOutputx[5][5];
+int sobelOutputy[5][5];
+int gradientDirS[3][3];
+int gradientDirP[3][3];
+
+int ssdValue;
+
+void pad(){
+    // 1. Duplicate the first and last vectors (First gets put on top / Last gets put on bottom)
+    // 2. Copy the body from input into the body of proc_input
+    // 3. Extend every first and last number (First gets put into left / Last gets put into right) in proc_input
+    
+    // Create padding of top row of input, into the top row of proc_input
+    for (int i = 0; i <= 4; i++){   // loop that copies the first row into padded area (upper)
+        proc_input[0][i+1] = input[0][i];
+    }
+    
+    // Copy the body of input into the body of proc_input 
+    for (int i = 0; i <=4; i++){        // nested loop that copies the input into the body of the processed
+        for (int j = 0; j <= 4; j++){
+            proc_input[i+1][j+1] = input[i][j]; // proc_input indexes are +1 since the buffer is above and left  
+        }
+    }
+
+    // Create padding of bottom row of input, into the bottom row of proc_input
+    for (int i = 0; i <= 6; i++){   // loop that copies the last row into padded area (lower)
+        proc_input[6][i+1] = input[4][i];
+    }
+
+    // Create padding for the left and right side, by extending the sides of proc_input
+    for (int i = 0; i <= 6; i++){
+        proc_input[i][0] = proc_input[i][1];
+        proc_input[i][6] = proc_input[i][5];
+
+    }
+}
+
+// prints the input matrix (10,3,2,5,4) etc
+void printInput(){      
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << input[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// prints the padded matrix from the original input matrix
+void printPadded(){      
+    for (int i = 0; i<=6; i++){ // row
+        for (int j = 0; j <=6; j++){    // col
+            cout << proc_input[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print output of prewitt y
+void printOutputY(){     
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << outputy[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print output of prewitt x
+void printOutputX(){     
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << outputx[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print sobel output x
+void printSobelX(){  
+   
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << sobelOutputx[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print sobel output y
+void printSobelY(){  
+   
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << sobelOutputy[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// print output of gradient image
+void printGradient(){     
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << gradientImg[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+void printThreshImg(){      
+    for (int i = 0; i<=4; i++){ // row
+        for (int j = 0; j <=4; j++){    // col
+            cout << threshImg[i][j] << " ";
+        }
+        cout << endl;
+    } 
+}
+
+// apply the prewitt vertical
+void prewittY(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            outputy[i][j] = (    (proc_input[i][j]*-1) + (proc_input[i][j+1]*-1) + (proc_input[i][j+2]*-1) +
+                                (proc_input[i+1][j]*0)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*0)   + 
+                                (proc_input[i+2][j]*1)+ (proc_input[i+2][j+1]*1)+ (proc_input[i+2][j+2]*1) );
+        }
+    }
+}
+
+// apply the prewitt horizontal
+void prewittX(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            outputx[i][j] = (    (proc_input[i][j]*-1) + (proc_input[i][j+1]*0) + (proc_input[i][j+2]*1) +
+                                (proc_input[i+1][j]*-1)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*1)   + 
+                                (proc_input[i+2][j]*-1)+ (proc_input[i+2][j+1]*0)+ (proc_input[i+2][j+2]*1) );
+        }
+    }
+}
+
+// calc gradient image
+void gradient(){
+    for (int i = 0; i <= 4; i++){
+        for (int j = 0; j <= 4; j++){
+            gradientImg[i][j] = (abs(outputy[i][j]) + abs(outputx[i][j]));
+        }
+    }
+}
+
+
+// Use average of X as threshold on the Prewitt X
+void thresh(){
+    for (int i = 0; i <= 4; i++){
+        for (int j = 0; j <= 4; j++){
+            if (gradientImg[i][j] >= ssdValue)
+                threshImg[i][j] = 1;
+            else
+                threshImg[i][j] = 0;
+        }
+    }
+}
+
+
+// Repopulate input array with the second matrix
+// Using this so I dont have to copy every function to work on the new array
+// This is highly wasteful and ineficcient use of space. And a dumb way to program 
+void repopulateInput(){
+    for (int i = 0; i <= 4; i++){
+        for (int j = 0; j<= 4; j++){
+            input[i][j] = input2[i][j];
+        }
+    }
+}
+
+// Sobel operator
+void sobelX(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            sobelOutputx[i][j] = (    (proc_input[i][j]*-1) + (proc_input[i][j+1]*0) + (proc_input[i][j+2]*1) +
+                                (proc_input[i+1][j]*-2)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*2)   + 
+                                (proc_input[i+2][j]*-1)+ (proc_input[i+2][j+1]*0)+ (proc_input[i+2][j+2]*1) );
+        }
+    }
+}
+
+// Sobel operator
+void sobelY(){
+    for (int i = 0; i <= 4; i++){       // moving vertic 
+        for (int j = 0; j <= 4; j++){   // moving horizont
+            sobelOutputy[i][j] = (    (proc_input[i][j]*-1) + (proc_input[i][j+1]*-2) + (proc_input[i][j+2]*-1) +
+                                (proc_input[i+1][j]*0)   + (proc_input[i+1][j+1]*0)   + (proc_input[i+1][j+2]*0)   + 
+                                (proc_input[i+2][j]*1)+ (proc_input[i+2][j+1]*2)+ (proc_input[i+2][j+2]*1) );
+        }
+    }
+}
+
+// SSD (fx1 - fy1)^2 + (fx2 - fy2)^2 + ...
+// sum square diff
+void ssd(){
+    for (int i = 0; i <=4; i++){
+        for (int j = 0; j<=4; j++){
+            ssdValue += (pow((outputx[i][j] - outputy[i][j]), 2));
+        }
+    }
+    // flag! 
+    ssdValue = (ssdValue/25);
+    ssdValue = sqrt(ssdValue);
+
+}
+
+// check center entry direction
+void directionS(){
+    for (int i = 1; i<=3; i++){
+        for (int j = 1; j<=3; j++){
+            gradientDirS[i-1][j-1] = abs(sobelOutputx[i][j]) + abs(sobelOutputy[i][j]); 
+        }
+    }
+}
+
+// print direction
+void printDirS(){
+    for (int i=0; i<= 2; i++){
+        for (int j=0; j<= 2; j++){
+            cout << gradientDirS[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+// check center entry direction
+void directionP(){
+    for (int i = 1; i<=3; i++){
+        for (int j = 1; j<=3; j++){
+            gradientDirP[i-1][j-1] = abs(outputx[i][j]) + abs(outputy[i][j]); 
+        }
+    }
+}
+
+// print direction
+void printDirP(){
+    for (int i=0; i<= 2; i++){
+        for (int j=0; j<= 2; j++){
+            cout << gradientDirP[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+int main(){
+    pad();
+    cout << "Input:" << endl;
+    printInput();
+    cout << "\n Padded input:" << endl;
+    printPadded();
+    cout << "\n Output Y" << endl;
+    prewittY();
+    printOutputY();
+    cout << "\n Output X " << endl;
+    prewittX();
+    printOutputX();
+
+    cout << "\n Gradient (Adding the sum of every entry from x and y)\n";
+    // Gdt (|fx1+fx2+fx3+...|) + (|fy1+fy2+fy3+...|)
+    gradient();
+    printGradient();
+
+    // SSD (fx1 - fy1)^2 + (fx2 - fy2)^2 + ...
+    ssd();
+    cout << "\nSSD Value\n" << ssdValue;
+    // Check each gradient value with SSD as threshold
+    cout << "\nThresh image\n";
+    thresh();
+    printThreshImg();
+
+    cout << "\n End of Part A";
+
+    cout << "\n Start of Part B ";
+
+    repopulateInput();
+    pad();
+
+    cout << "\nInput 2 \n";
+    printInput();
+    cout << "\nPadded Input 2\n";
+    printPadded();
+    cout << "\nPrewitt X\n";
+    prewittX();
+    printOutputX();
+    cout << "\nPrewitt Y\n";
+    prewittY();
+    printOutputY();
+
+    cout << "\nSobel X\n";
+    sobelX();
+    printSobelX();
+
+    cout << "\nSobel Y\n";
+    sobelY();
+    printSobelY();
+
+    cout << "\n Prewitt Gradient direction\n";
+    directionP();
+    printDirP();
+
+    cout << "\n Sobel Gradient direction\n";
+    directionS();
+    printDirS();
+}
